@@ -4,15 +4,6 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+Hi! My name is Álvaro Páez. I'm a software developer with a background on telecommunications engineering. My main focus is on C++ and robotics systems. I sometimes like to write software for fun too, mainly emulators. Here is is where I write down anything interesting I learn along the way.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
-
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+I host my personal projects at [Github](https://github.com/Thordreck/). You can contact through [Linkedin](https://www.linkedin.com/in/alvaro-paez/) or [email](mailto:paezguerraalvaro@gmail.com).

@@ -18,20 +18,30 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Your awesome title
+title: Alvaro <Paez>
 email: paezguerraalvaro@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Programming bits, personal projects and random thoughts.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://thordreck.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 domain: "thordreck.github.io"
-twitter_username: jekyllrb
-github_username:  jekyll
+github_username:  thordreck
 
 # Build settings
 theme: minima
 plugins:
   - jekyll-feed
+
+
+minima:
+  social_links:
+    - title: Thordreck at GitHub
+      icon: github
+      url: "https://github.com/thordreck"
+    - title: Alvaro Paez at Linkedin
+      icon: linkedin
+      url: "https://linkedin.com/in/alvaro-paez"
+  skin: dark
 
 # Exclude from processing.
 # The following items will not be processed, by default.

@@ -6,7 +6,7 @@ categories: programming c++
 tags: c++ programming emulation
 ---
 
-I have been working on an original gameboy emulator for a while now. My main goal was to familiarize myself with all the new stuff that got added into C++ 20 and 23, try out new tools and document the process. This is not intended as a guide on how to write a gameboy emulator - the documentation online is extensive and of better quality than what I could produce myself. I am merely standing on the shoulders of giants.
+I have been working on an original gameboy emulator for a couple months now. My main goal was to familiarize myself with all the new stuff that got added into C++ 20 and 23, try out new tools and document the process. This is not intended as a guide on how to write a gameboy emulator - the documentation online is extensive and of better quality than what I could produce myself. I am merely standing on the shoulders of giants.
 
 Instead, I want to focus on what a project written from scratch in C++23 looks like, what currently works and what doesn't, the pitfalls I fell into and how I tackled some specific problems. While there are still lots of stuff missing, I think the project is at a stage where I can draw some conclusions. Before we delve into the details, though, here are some screenshots of the emulator running:
 
@@ -25,17 +25,17 @@ I started this project with some goals in mind:
 * Extensive use of templates and concepts.
 * All code had to be structured in modules, instead of the traditional header + source file combo.
 * No usage of macros.
-* Favorite composition over inheritance.
+* Favor composition over inheritance.
 * Testing should not be painful.
 
-I am proud to announce that I have failed miserably in pretty much all of these goals. I have learnt a bit along the way, though, so hopefully this could be useful to someone. 
+I am proud to announce that I have failed miserably in pretty much all of these goals. I have learnt a bit along the way, so hopefully this could be useful to someone. 
 
 I have also came across a couple of [CppCon talks by Tom Tesch](https://www.youtube.com/watch?v=4lliFwe5_yg) recently, where he also talks about modern C++ applied to gameboy emulation. While his approach is fundamentally different to mine (he tried to refactor and modernize an already existing codebase), I share his conclusions. Good code still remains good code, even if it was written in what's now considered "old" C++. Newest versions, however, offer more tools to write such good code.
 
 
 # Concepts
 
-I wholeheartedly think concepts are one of the best additions to the language I have seen in a while. They offer new syntax to define the requirements a type must satisfy to be a valid candidate for a templatised function. Here's an example on how I used them to model the memory bus (note how simple concepts can be combined to define more complex ones):
+I wholeheartedly think concepts are one of the best additions to the language I have seen in a while. They offer new syntax to define the requirements a type must satisfy to be a valid candidate for a templated function. Here's an example on how I used them to model the memory bus (note how simple concepts can be combined to define more complex ones):
 
 {% highlight c++ %}
 
@@ -91,15 +91,15 @@ struct or_a_hl
 {% endhighlight c++ %}
 
 As seen in the snippet above, the simplest way to use a concept is to use its name instead of `class`  or `typename` in the template parameter.
-While everything that can be done with concepts could be done without them already, they do lower the entry barrier. First of all, they serve as documentation on what the function expects and, more importantly, when you try to use a type that does not satisfy it, you get an actual error your average God-fearing human being with a 9-to-5 job can understand, instead of pages and pages of failed template instantiations.
+While everything that can be done with concepts could be done without them already, they do lower the entry barrier. First of all, they serve as documentation on what the function expects. More importantly, when you try to use a type that does not satisfy it, you get an actual error your average God-fearing developer with a 9-to-5 job can understand, instead of pages and pages of failed template instantiations.
 
-By relying more on templates, I have noticed that I tend to write code that is easier to test. Take the cpu instruction from above, for example. If I wanted to test it, I could simply write a wrapper around an `std::array` that exposes a `read()` and `write()` methods and pass it, instead of using the real implementation. It also had the side-effect of forcing me to write classes in a way that rely on dependencies being passed around when needed, rather than classes creating them on their own and taking ownership or receiving them in their constructor. The former would only require a method to be a template, while the latter would force the class itself to be templatised, which I tried to avoid to reduce complexity.
+By relying more on templates, I have noticed that I tend to write code that is easier to test. Take the cpu instruction from above, for example. If I wanted to test it, I could simply write a wrapper around an `std::array` that exposes a `read()` and `write()` methods and pass it, instead of using the real implementation. It also had the side-effect of forcing me to write classes in a way that rely on dependencies being passed around when needed, rather than classes creating them on their own and taking ownership or receiving them in their constructor. The former would only require a method to be a template, while the latter would force the class itself to be templated, which I tried to avoid to reduce complexity.
 
-I think concepts are the final push to drop both the "template" and "meta" from template metaprogramming. Template programming is just normal programming.
+I think concepts are the final push to drop both the "template" and "meta" from template metaprogramming. Template metaprogramming is just normal programming.
 
 # Modules
 
-I think modules are also a great addition and a welcomed paradigm shift, but tooling support is not there yet. Do not, and I repeat, do not use modules in a serious long term project.
+I think modules are also a great addition and a welcomed paradigm shift, but tooling support is not there yet. Do not, and I repeat, do not use modules in a serious long term project in its current state.
 
 Let's get the basics first before diving into the issues. Modules offer a way to compartmentalize code into units. Inside a unit, constructs such as types, classes, functions and concepts can be exported selectively so they are visible to consumers that import them. Here's an example of the top-level module that implements the gameboy interruptions:
 
@@ -145,11 +145,11 @@ namespace interrupts
 
 {% endhighlight c++ %}
 
-To use interruptions in any other place, it's enough with prefacing the code with `import interrupts;`. The interrupts module itself imports several modules as dependencies. Note the `import std;`, that replaces individual `include` directives for the standard library, such as `#include <cstint>`. In terms of actual file hierarchies, modules replace `.h` and `.cpp` files with `.cppm` ones, as shown in the picture below:
+To use interruptions anywhere else, preface the code with `import interrupts;`. The interrupts module itself imports several modules as dependencies. Note the `import std;`, that replaces individual `include` directives for the standard library, such as `#include <cstint>`. In terms of actual file hierarchies, modules replace `.h` and `.cpp` files with `.cppm` ones, as shown in the picture below:
 
 ![File hierarchy of a C++ module](/assets/images/module-file-hierarchy-example.png)
 
-Building code that use modules using CMake is more or less the same as usual. The only difference being that module files must be tagged properly and some additional target properties must be set:
+Building code that use modules using CMake is more or less the same as usual. The only difference being that module files must be tagged as such and some additional target properties must be set:
 
 {% highlight cmake %}
 
@@ -178,7 +178,7 @@ Modules have helped me to reason differently about how I structured the whole pr
 
 And now, for the ugly bits. I initially intended to write this project using Visual Studio Code. It's what I have been using recently and I saw no reason to change. Unfortunately, VS Code's Intellisense does not work properly with modules. While the project compiles, it's basically impossible to work with it, since it does not recognize `import` nor `export`, code completion does not work, etc. I switched to Visual Studio, as I read modules support was more mature there. And it kind of worked, until it didn't. It recognized module syntax properly, but it would randomly choke on some modules while recognizing and being able to go to the definitions of others. Turns out the IDE relies on the existence of IFC files for things like code completion/navigation, etc and, for some reason, it would sometimes not generate them. I tried to forcefully generate them with some CMake magic but it was not reliable. 
 
-I ended up switching to CLion. Both the 2025 and 2026 version seem to work fine out of the box. While I do not have anything against it, is unfortunate that there are currently no other viable options.
+I ended up switching to CLion. Both the 2025 and 2026 version seem to work fine out of the box. While I do not have anything against it, it is unfortunate that there are currently no other viable options.
 
 It's finally time to address the elephant in the room when it comes to modules: third party dependencies. External dependencies should not be a problem in theory, since header files can be included in modules just fine. While that is certainly an option, I wanted to try implementing everything using modules, so I tried to wrap all third party libraries in my own modules. See the example below, that adapts the initialization process of the SDL library in a module (ignore any possible issues due to copies, moves, default constructor, etc):
 
@@ -226,9 +226,9 @@ namespace sdl
 {% endhighlight c++ %}
 
 
-Adapting external libraries as modules is just a matter of identifying the individual header files and including them in a top `module` section. This approach works perfectly well for code that do not rely heavily on macros, since those cannot be exported. 
+Adapting external libraries as modules is just a matter of identifying the individual header files and including them in a top `module` section. This approach works perfectly well for code that does not rely heavily on macros, since those cannot be exported. 
 
-My first taste of defeat because of this came when integrating [Tracy](https://github.com/wolfpld/tracy) into the project. Tracy is a profiler library that relies on macros like `ZoneScoped` extensively for code instrumentation. I tried to replace them with my own non-macro functions but performance took a hit, since it uses some macro shenanigans to define stuff at compile time. I also had to trust the compiler was smart enough to remove my empty implementations on non-profiling builds, something you don't have to worry about when using macros.
+Because of this, my first taste of defeat came when integrating [Tracy](https://github.com/wolfpld/tracy) into the project. Tracy is a profiler library that relies on macros like `ZoneScoped` extensively for code instrumentation. I tried to replace them with my own non-macro functions but performance took a hit, since it uses some macro shenanigans to define stuff at compile time. I also had to trust the compiler was smart enough to remove my empty implementations on non-profiling builds, something you don't have to worry about when using macros.
 
 The final nail in the coffin for me was Qt. While I had a working interface implemented using [imgui](https://github.com/ocornut/imgui) and [sdl3](https://github.com/libsdl-org/SDL), I wanted to support additional frontends. It turned out to be a nightmare. Forget about wrapping it in a module, it was not even possible to use it directly. This was not only due to their reliance on your code inheriting from their own types like `QObject` and macros like `Q_OBJECT`, `Q_PROPERTY` and `QML_ELEMENT`, but due to their code generation system. Trying to define a QObject class within a module resulted in compilation errors, since Qt's code generation system does not support them. The only workaround I found was to fallback to header and cpp files just for types interacting directly with Qt, compile them separately and link those against my own modules.
 
@@ -247,7 +247,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RelWithDebInfo ON)
 
 {% endhighlight cmake %}
 
-I have found writing code that can be inlined to be extremely important for performance. This, however, increases complexity, as commonly used type erasure mechanisms like function pointers or `std::function` make it nearly impossible. Templates and concepts are a good way to write code that can be inlined.
+I have found that writing code that can be inlined to be extremely important for performance. This, however, increases complexity, as commonly used type erasure mechanisms like function pointers or `std::function` make it nearly impossible. Templates and concepts are a good way to write code that can be inlined.
 
 As previously mentioned, I have used Tracy as the main profiler. It's an useful tool to have an overview of where your code spends most of the time, as shown in the screenshot below:
 
@@ -256,14 +256,14 @@ As previously mentioned, I have used Tracy as the main profiler. It's an useful 
 
 Looking at the right side window in the profiler, it's possible to see that a huge chunk of the time is spent reading from and writing to the memory bus or ticking the different components. This kind of profiling has helped me realize when, for example, the simple act of invoking a function was starting to become a bottleneck. My initial implementation would simply call step to each component (cpu, timers, graphics) in each clock step. With the main clock running at 4Mhz, that's a lot of function calls over a frame. Instead, the usual approach in this scenario is to instruct the emulator to advance a number of ticks at once, thus reducing the overhead of invoking the function each time.
 
-Sometimes this kind of high-level profiling is not enough to decide where to spend efforts optimizing. In those cases it's necessary to switch to vendor-specific profiling tools that can provide more low-level profiling info. In my current setup I have used AMD uProf. The tool is capable of reporting the most prominent hotspots and give you the assembly that correspond to a piece of code. Here's an screenshot:
+Sometimes this kind of high-level profiling is not enough to decide where to spend efforts optimizing. In those cases it's necessary to switch to vendor-specific profiling tools that can provide more low-level info. In my current setup I have used AMD uProf. The tool is capable of reporting the most prominent hotspots and give you the assembly that correspond to a piece of code. Here's an screenshot:
 
 
 ![AMD uProf example](/assets/images/gameboy-amd-uprof-example.png)
 
-This has proved to be invaluable to not only improve performance, but also gain a better instinct on what's more performant in general. Here's some of the things this has helped me catching:
+This has proved to be invaluable to not only improve performance, but to also gain a better instinct on what's more performant in general. Here's some of the things this has helped me catching:
 
-* I had branches in some parts of the memory bus to discards regions of memory that were unused earlier. It turned out to be better to simply unify all cases into a huge switch block that compiled to a jump table.
+* I had branches in some parts of the memory bus to discard regions of memory that were unused earlier. It turned out to be better to simply unify all cases into a huge switch block that compiled to a jump table.
 * I made the assumption that some template code that used `std::tuple` was compiling into a jump table. This was wrong. I ended up having to switch to a macro instead of a template.
 
 # Testing
@@ -279,7 +279,7 @@ There's the infamous acid2 test, originally conceived for web browsers, that has
 
 This is the kind of test that can be easily automated by comparing the emulator's framebuffer and a ground truth image.
 
-Other tests do not rely on the emulator having a functional screen, and instead send their results through the serial port. And then there's those that are a combination of the two, where some magic number is sent through the serial port to indicate a test has failed, but details on why are printed on the screen. This is the case with some test suites like [mooneye](https://github.com/Gekkio/mooneye-test-suite). 
+Other tests do not rely on the emulator having a functional screen, and instead send their results through the serial port. And then there are those that are a combination of the two, where some magic number is sent through the serial port to indicate a test has failed, but details on why are printed on the screen. This is the case with some test suites like [mooneye](https://github.com/Gekkio/mooneye-test-suite). 
 
 The vast majority of test roms I have found end up using the screen to display their results. While this is not an issue, I wish it was easier to somehow attach and display images as test results using CTest.
 
