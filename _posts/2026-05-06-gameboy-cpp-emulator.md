@@ -6,7 +6,7 @@ categories: programming c++
 tags: c++ programming emulation
 ---
 
-I have been working on an original gameboy emulator for a couple months now. My main goal was to familiarize myself with all the new stuff that got added into C++ 20 and 23, try out new tools and document the process. This is not intended as a guide on how to write a gameboy emulator - the documentation online is extensive and of better quality than what I could produce myself. I am merely standing on the shoulders of giants.
+I have been working on an [original gameboy emulator](https://github.com/Thordreck/gameboy-cpp) for a couple months now. My main goal was to familiarize myself with all the new stuff that got added into C++ 20 and 23, try out new tools and document the process. This is not intended as a guide on how to write a gameboy emulator - the documentation online is extensive and of better quality than what I could produce myself. I am merely standing on the shoulders of giants.
 
 Instead, I want to focus on what a project written from scratch in C++23 looks like, what currently works and what doesn't, the pitfalls I fell into and how I tackled some specific problems. While there are still lots of stuff missing, I think the project is at a stage where I can draw some conclusions. Before we delve into the details, though, here are some screenshots of the emulator running:
 
